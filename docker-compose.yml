@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: vehicle-telematics-postgres
+    environment:
+      POSTGRES_DB: vehicle_telematics
+      POSTGRES_USER: telematics
+      POSTGRES_PASSWORD: telematics
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
