@@ -64,4 +64,19 @@ public class User {
     public void changePasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
     }
+
+    public void updateProfile(String email, String firstName, String lastName) {
+        this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
+
+    public void updateAdministration(UserRole role, boolean enabled) {
+        this.role = role;
+        this.enabled = enabled;
+    }
+
+    public void disable() {
+        this.enabled = false;
+    }
 }
