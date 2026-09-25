@@ -1,10 +1,12 @@
 package com.vehicletelematics.backend.vehicles.domain;
 
+import com.vehicletelematics.backend.devices.domain.Device;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -41,6 +43,9 @@ public class Vehicle {
 
     @Column(nullable = false)
     private boolean active = true;
+
+    @OneToOne(mappedBy = "vehicle")
+    private Device device;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -97,5 +102,13 @@ public class Vehicle {
 
     public void deactivate() {
         active = false;
+    }
+
+    public void assignDevice(Device device) {
+        this.device = device;
+    }
+
+    public void removeDevice() {
+        this.device = null;
     }
 }

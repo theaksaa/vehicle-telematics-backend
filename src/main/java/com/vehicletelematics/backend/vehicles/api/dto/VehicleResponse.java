@@ -13,6 +13,7 @@ public record VehicleResponse(
         String vin,
         String description,
         boolean active,
+        String deviceId,
         Instant createdAt,
         Instant updatedAt) {
 
@@ -26,6 +27,7 @@ public record VehicleResponse(
                 vehicle.getVin(),
                 vehicle.getDescription(),
                 vehicle.isActive(),
+                vehicle.getDevice() == null ? null : vehicle.getDevice().getDeviceId(),
                 vehicle.getCreatedAt(),
                 vehicle.getUpdatedAt());
     }

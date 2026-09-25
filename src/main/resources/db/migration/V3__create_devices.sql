@@ -1,0 +1,21 @@
+CREATE TABLE devices (
+    id BIGSERIAL PRIMARY KEY,
+    device_id VARCHAR(64) NOT NULL,
+    vehicle_id BIGINT,
+    status VARCHAR(20) NOT NULL DEFAULT 'OFFLINE',
+    last_seen_at TIMESTAMP WITH TIME ZONE,
+    last_boot_id BIGINT,
+    firmware_version VARCHAR(32),
+    desired_config_version BIGINT,
+    desired_config JSONB,
+    desired_config_updated_at TIMESTAMP WITH TIME ZONE,
+    reported_config_version BIGINT,
+    reported_config JSONB,
+    reported_config_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_devices_device_id UNIQUE (device_id),
+    CONSTRAINT uk_devices_vehicle_id UNIQUE (vehicle_id),
+    CONSTRAINT fk_devices_vehicle FOREIGN KEY (vehicle_id) REFERENCES vehicles (id),
+    CONSTRAINT ck_devices_status CHECK (status IN ('ONLINE', 'OFFLINE'))
+);
