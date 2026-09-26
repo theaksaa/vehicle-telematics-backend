@@ -12,6 +12,7 @@ import com.vehicletelematics.backend.vehicles.domain.Vehicle;
 import com.vehicletelematics.backend.vehicles.exception.VehicleNotFoundException;
 import com.vehicletelematics.backend.vehicles.repository.VehicleRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
@@ -25,10 +26,15 @@ public class DeviceService {
 
     private final DeviceRepository deviceRepository;
     private final VehicleRepository vehicleRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public DeviceService(DeviceRepository deviceRepository, VehicleRepository vehicleRepository) {
+    public DeviceService(
+            DeviceRepository deviceRepository,
+            VehicleRepository vehicleRepository,
+            ApplicationEventPublisher eventPublisher) {
         this.deviceRepository = deviceRepository;
         this.vehicleRepository = vehicleRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional(readOnly = true)
@@ -79,6 +85,8 @@ public class DeviceService {
         validateConfigPayload(payload);
         Device device = findByDeviceIdForUpdate(deviceId);
         device.updateDesiredConfig(payload);
+        eventPublisher.publishEvent(new DesiredConfigChangedEvent(
+                device.getDeviceId(), device.getDesiredConfigVersion(), device.getDesiredConfig().deepCopy()));
         return device;
     }
 
@@ -94,6 +102,17 @@ public class DeviceService {
                     "Reported config version cannot be newer than desired config version");
         }
         device.updateReportedConfig(version, payload);
+        return device;
+    }
+
+    @Transactional
+    public Device reportState(String deviceId, DeviceStatus status, Long bootId, Instant receivedAt) {
+        if (status == DeviceStatus.ONLINE && bootId == null) {
+            throw new InvalidDeviceDataException("Online state must contain boot_id");
+        }
+        validateNonNegative(bootId, "Boot ID");
+        Device device = findByDeviceIdForUpdate(deviceId);
+        device.reportState(status, bootId, receivedAt);
         return device;
     }
 

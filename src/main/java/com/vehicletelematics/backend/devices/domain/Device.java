@@ -124,6 +124,14 @@ public class Device {
         reportedConfigAt = Instant.now();
     }
 
+    public void reportState(DeviceStatus status, Long bootId, Instant receivedAt) {
+        this.status = status;
+        if (status == DeviceStatus.ONLINE) {
+            this.lastSeenAt = receivedAt;
+            this.lastBootId = bootId;
+        }
+    }
+
     public DeviceConfigState getConfigState() {
         if (desiredConfigVersion == null || desiredConfig == null) {
             return DeviceConfigState.NOT_CONFIGURED;
