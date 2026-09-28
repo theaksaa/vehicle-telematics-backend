@@ -132,6 +132,14 @@ public class Device {
         }
     }
 
+    public void observeTelemetry(long bootId, Instant receivedAt) {
+        status = DeviceStatus.ONLINE;
+        if (lastSeenAt == null || receivedAt.isAfter(lastSeenAt)) {
+            lastSeenAt = receivedAt;
+        }
+        lastBootId = bootId;
+    }
+
     public DeviceConfigState getConfigState() {
         if (desiredConfigVersion == null || desiredConfig == null) {
             return DeviceConfigState.NOT_CONFIGURED;

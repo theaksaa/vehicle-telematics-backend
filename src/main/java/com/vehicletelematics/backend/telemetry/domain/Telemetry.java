@@ -102,4 +102,8 @@ public class Telemetry {
         this.acceleratorPct = acceleratorPct;
         this.rssiDbm = rssiDbm;
     }
+
+    public void assignToTrip(Long tripId) {
+        this.tripId = tripId;
+    }
 }

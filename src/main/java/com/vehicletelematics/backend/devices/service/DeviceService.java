@@ -11,6 +11,8 @@ import com.vehicletelematics.backend.devices.repository.DeviceRepository;
 import com.vehicletelematics.backend.vehicles.domain.Vehicle;
 import com.vehicletelematics.backend.vehicles.exception.VehicleNotFoundException;
 import com.vehicletelematics.backend.vehicles.repository.VehicleRepository;
+import com.vehicletelematics.backend.trips.service.TripService;
+import com.vehicletelematics.backend.vehicles.state.VehicleStateService;
 import org.springframework.stereotype.Service;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,14 +29,20 @@ public class DeviceService {
     private final DeviceRepository deviceRepository;
     private final VehicleRepository vehicleRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final VehicleStateService vehicleStateService;
+    private final TripService tripService;
 
     public DeviceService(
             DeviceRepository deviceRepository,
             VehicleRepository vehicleRepository,
-            ApplicationEventPublisher eventPublisher) {
+            ApplicationEventPublisher eventPublisher,
+            VehicleStateService vehicleStateService,
+            TripService tripService) {
         this.deviceRepository = deviceRepository;
         this.vehicleRepository = vehicleRepository;
         this.eventPublisher = eventPublisher;
+        this.vehicleStateService = vehicleStateService;
+        this.tripService = tripService;
     }
 
     @Transactional(readOnly = true)
@@ -113,6 +121,10 @@ public class DeviceService {
         validateNonNegative(bootId, "Boot ID");
         Device device = findByDeviceIdForUpdate(deviceId);
         device.reportState(status, bootId, receivedAt);
+        vehicleStateService.updateConnectivity(device);
+        if (status == DeviceStatus.OFFLINE && device.getVehicle() != null) {
+            tripService.closeOpenTrip(device.getVehicle().getId());
+        }
         return device;
     }
 
@@ -143,6 +155,8 @@ public class DeviceService {
                 });
 
         device.assignTo(vehicle);
+        vehicleStateService.initialize(vehicle);
+        vehicleStateService.updateConnectivity(device);
         return device;
     }
 
@@ -151,7 +165,11 @@ public class DeviceService {
         if (!vehicleRepository.existsById(vehicleId)) {
             throw new VehicleNotFoundException(vehicleId);
         }
-        deviceRepository.findByVehicleId(vehicleId).ifPresent(Device::unassign);
+        deviceRepository.findByVehicleId(vehicleId).ifPresent(device -> {
+            tripService.closeOpenTrip(vehicleId);
+            vehicleStateService.updateConnectivity(device.getVehicle(), false);
+            device.unassign();
+        });
     }
 
     private String normalizeDeviceId(String deviceId) {

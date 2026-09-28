@@ -7,6 +7,7 @@ import com.vehicletelematics.backend.vehicles.exception.RegistrationAlreadyExist
 import com.vehicletelematics.backend.vehicles.exception.VehicleNotFoundException;
 import com.vehicletelematics.backend.vehicles.exception.VinAlreadyExistsException;
 import com.vehicletelematics.backend.vehicles.repository.VehicleRepository;
+import com.vehicletelematics.backend.vehicles.state.VehicleStateService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,9 +19,11 @@ import java.util.Locale;
 public class VehicleService {
 
     private final VehicleRepository vehicleRepository;
+    private final VehicleStateService vehicleStateService;
 
-    public VehicleService(VehicleRepository vehicleRepository) {
+    public VehicleService(VehicleRepository vehicleRepository, VehicleStateService vehicleStateService) {
         this.vehicleRepository = vehicleRepository;
+        this.vehicleStateService = vehicleStateService;
     }
 
     @Transactional(readOnly = true)
@@ -53,13 +56,15 @@ public class VehicleService {
         ensureRegistrationAvailable(normalizedRegistration, null);
         ensureVinAvailable(normalizedVin, null);
 
-        return vehicleRepository.save(new Vehicle(
+        Vehicle vehicle = vehicleRepository.save(new Vehicle(
                 normalizedRegistration,
                 normalizedManufacturer,
                 normalizedModel,
                 year,
                 normalizedVin,
                 normalizedDescription));
+        vehicleStateService.initialize(vehicle);
+        return vehicle;
     }
 
     @Transactional
