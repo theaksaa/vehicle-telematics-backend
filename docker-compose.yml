@@ -11,5 +11,42 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  nominatim:
+    image: mediagis/nominatim:5.3
+    container_name: vehicle-telematics-nominatim
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8088:8080"
+    environment:
+      PBF_URL: https://download.geofabrik.de/europe/serbia-latest.osm.pbf
+      REPLICATION_URL: https://download.geofabrik.de/europe/serbia-updates/
+      UPDATE_MODE: continuous
+      REPLICATION_UPDATE_INTERVAL: 86400
+      REPLICATION_RECHECK_INTERVAL: 900
+      REVERSE_ONLY: "true"
+      IMPORT_STYLE: address
+      IMPORT_WIKIPEDIA: "false"
+      THREADS: 8
+      GUNICORN_WORKERS: 4
+      WARMUP_ON_STARTUP: "false"
+      NOMINATIM_PASSWORD: nominatim-local-only
+      POSTGRES_SHARED_BUFFERS: 2GB
+      POSTGRES_MAINTENANCE_WORK_MEM: 4GB
+      POSTGRES_AUTOVACUUM_WORK_MEM: 512MB
+      POSTGRES_WORK_MEM: 32MB
+      POSTGRES_EFFECTIVE_CACHE_SIZE: 8GB
+      POSTGRES_MAX_CONNECTIONS: 50
+    volumes:
+      - nominatim_data:/var/lib/postgresql/16/main
+    shm_size: 1gb
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      # The HTTP server starts only after the initial Serbia import completes.
+      start_period: 4h
+
 volumes:
   postgres_data:
+  nominatim_data:
