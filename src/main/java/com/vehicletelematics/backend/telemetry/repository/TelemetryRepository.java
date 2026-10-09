@@ -14,11 +14,31 @@ public interface TelemetryRepository extends JpaRepository<Telemetry, Long> {
     @Query("""
             select t from Telemetry t
             where t.vehicle.id = :vehicleId
-              and (:from is null or t.recordedAt >= :from)
-              and (:to is null or t.recordedAt <= :to)
             order by t.recordedAt desc, t.id desc
             """)
-    Page<Telemetry> findVehicleHistory(Long vehicleId, Instant from, Instant to, Pageable pageable);
+    Page<Telemetry> findVehicleHistory(Long vehicleId, Pageable pageable);
+
+    @Query("""
+            select t from Telemetry t
+            where t.vehicle.id = :vehicleId and t.recordedAt >= :from
+            order by t.recordedAt desc, t.id desc
+            """)
+    Page<Telemetry> findVehicleHistoryFrom(Long vehicleId, Instant from, Pageable pageable);
+
+    @Query("""
+            select t from Telemetry t
+            where t.vehicle.id = :vehicleId and t.recordedAt <= :to
+            order by t.recordedAt desc, t.id desc
+            """)
+    Page<Telemetry> findVehicleHistoryTo(Long vehicleId, Instant to, Pageable pageable);
+
+    @Query("""
+            select t from Telemetry t
+            where t.vehicle.id = :vehicleId
+              and t.recordedAt >= :from and t.recordedAt <= :to
+            order by t.recordedAt desc, t.id desc
+            """)
+    Page<Telemetry> findVehicleHistoryBetween(Long vehicleId, Instant from, Instant to, Pageable pageable);
 
     Page<Telemetry> findByTripIdOrderByRecordedAtAscIdAsc(Long tripId, Pageable pageable);
 }

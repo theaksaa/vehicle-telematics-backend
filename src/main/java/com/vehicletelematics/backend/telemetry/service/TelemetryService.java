@@ -86,8 +86,15 @@ public class TelemetryService {
         if (from != null && to != null && from.isAfter(to)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "from must not be after to");
         }
-        return PageResponse.from(telemetryRepository.findVehicleHistory(
-                vehicleId, from, to, PageRequest.of(page, size)).map(TelemetryResponse::from));
+        var pageable = PageRequest.of(page, size);
+        var history = from == null
+                ? (to == null
+                    ? telemetryRepository.findVehicleHistory(vehicleId, pageable)
+                    : telemetryRepository.findVehicleHistoryTo(vehicleId, to, pageable))
+                : (to == null
+                    ? telemetryRepository.findVehicleHistoryFrom(vehicleId, from, pageable)
+                    : telemetryRepository.findVehicleHistoryBetween(vehicleId, from, to, pageable));
+        return PageResponse.from(history.map(TelemetryResponse::from));
     }
 
     @Transactional(readOnly = true)
